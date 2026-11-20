@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Volumetric Pathways regression checks</title>
+<style>body{background:#0c1822;color:#d6e5e7;font:16px system-ui;padding:32px;line-height:1.6}button{font:inherit;padding:12px;margin:0 12px 16px 0}pre{white-space:pre-wrap}</style>
+<h1>Volumetric Pathways regression checks</h1>
+<p>Uses the actual application modules. The MediaPipe check loads the model and processes a blank canvas; it does not request a camera.</p>
+<button id="gpuCheck">Check WebGPU against CPU</button>
+<button id="visionCheck">Check MediaPipe model and inference</button>
+<pre id="results" role="status">Ready.</pre>
+<script src="../volume.js"></script>
+<script src="../gpu.js"></script>
+<script src="../head.js"></script>
+<script src="browser-checks.js"></script>
+</html>

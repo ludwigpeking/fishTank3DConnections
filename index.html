@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#030609" />
+  <title>Volumetric Pathways</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <main class="viewport">
+    <canvas id="scene" tabindex="0" aria-label="Spatial trail clouds. Press Escape or tap to reveal controls when the webcam is active."></canvas>
+    <video id="cameraVideo" autoplay playsinline muted aria-hidden="true" tabindex="-1"></video>
+    <div id="interface">
+      <header class="topbar">
+        <div class="scene-identity"><h1>Volumetric <span>Pathways</span></h1><div class="top-title"><span id="livePulse" class="live-pulse"></span><span id="simulationStatus">TRACES IN MOTION</span></div></div>
+        <div class="top-actions"><button id="newWorld" class="scene-action">New field</button><button id="dataToggle" class="scene-action" aria-expanded="false" aria-controls="dataPanel">Data</button></div>
+      </header>
+      <section id="dataPanel" class="data-panel" aria-label="Simulation data" hidden>
+        <header><h2>Field data</h2><button id="closeData" class="close-button" aria-label="Close data">×</button></header>
+        <div class="compute-status"><span id="computeBadge">INITIALIZING</span><span id="fpsBadge">— FPS</span></div>
+        <div class="metrics">
+          <div><div class="metric-name">Volume nodes</div><div id="nodesMetric" class="metric-value">—</div></div>
+          <div><div class="metric-name">Successful trips</div><div id="routesMetric" class="metric-value">—</div></div>
+          <div><div class="metric-name">Network coverage</div><div id="coverageMetric" class="metric-value">—</div></div>
+          <div><div class="metric-name">Last search</div><div id="searchMetric" class="metric-value">—</div></div>
+        </div>
+        <p class="legend"><span class="terrain-key">Resistance density</span><span class="trail-key">Fading motion trails</span></p>
+        <p id="annotation" class="data-note"></p><p id="footerNodeInfo" class="data-note"></p><p id="footerProgress" class="data-note"></p>
+        <button id="clearMemory" class="scene-action">Clear memory</button>
+      </section>
+      <section id="headControls" class="head-controls" aria-labelledby="headControlTitle">
+        <div class="eyebrow">WEBCAM CONTROL</div><h2 id="headControlTitle">Move into the space.</h2>
+        <p>Lean closer to move in. Lean back to move out. Your video stays on this device.</p>
+        <button id="cameraToggle" class="webcam-button" aria-pressed="false" aria-describedby="cameraStatus cameraHelp">Enable webcam</button>
+        <div class="head-control-options"><select id="viewMode" aria-label="Head-tracking view mode"><option value="window">Head translation</option><option value="orbit">Head-driven orbit</option></select><button id="calibrate" class="scene-action" disabled>Center view</button></div>
+        <div id="cameraStatus" class="tiny-status" role="status">Ready for head tracking.</div>
+        <p id="cameraHelp" class="camera-help">Controls disappear when connected. Press Esc or tap the scene to bring them back. Press C to recenter.</p>
+        <button id="hideInterface" class="scene-action" hidden>Return to the space</button>
+      </section>
+      <nav class="playback-dock" aria-label="Simulation controls"><button id="runButton" class="primary-button" aria-pressed="true">Pause</button><button id="stepButton" class="dock-button">Step</button><span class="dock-divider"></span><button id="resetView" class="dock-button">Reset view</button><button id="fullscreenButton" class="dock-button" aria-label="Enter full screen" title="Enter full screen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></button></nav>
+      <div id="loading" class="loading-screen"><div>Preparing the space…</div></div>
+      <div id="toast" class="toast" role="status"></div>
+    </div>
+  </main>
+  <script src="./volume.js"></script>
+  <script src="./gpu.js"></script>
+  <script src="./scene.js"></script>
+  <script src="./renderer.js"></script>
+  <script src="./canvas-fallback.js"></script>
+  <script src="./head.js"></script>
+  <script src="./main.js"></script>
+</body>
+</html>

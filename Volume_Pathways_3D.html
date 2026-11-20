@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#030609" />
+  <title>Volumetric Pathways</title>
+  <style>
+:root{color-scheme:dark;--background:#030609;--text:#d6e5e7;--muted:#8ba5b2;--accent:#87e4cf;--line:#2b414b}
+*{box-sizing:border-box}[hidden]{display:none!important}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--background);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text);font-size:16px}button,input,select{font:inherit}button{cursor:pointer;transition:background .15s,color .15s}button:disabled{opacity:.45;cursor:default}button:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:4px}button,select{touch-action:manipulation}.viewport{position:relative;width:100%;height:100vh;height:100dvh;overflow:hidden}#scene{display:block;width:100%;height:100%;touch-action:none;cursor:grab;outline:none}#scene:active{cursor:grabbing}.immersive #scene{cursor:none}#cameraVideo{position:fixed;left:-10px;top:-10px;width:1px;height:1px;opacity:0;pointer-events:none}
+.topbar{position:absolute;inset:0 0 auto;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:28px 32px;pointer-events:none}.scene-identity h1{font-size:22px;font-weight:550;letter-spacing:-.65px;margin:0 0 9px}.scene-identity h1 span{font-weight:350;color:#9ab3be}.top-title,.eyebrow,.compute-status,.data-note{font-family:ui-monospace,Consolas,monospace}.top-title{font-size:11px;letter-spacing:1.5px;color:#7fa3ae}.live-pulse{display:inline-block;width:5px;height:5px;border-radius:50%;margin:0 8px 1px 0;background:var(--accent)}.live-pulse.paused{background:#d2b57e}.top-actions{display:flex;gap:8px;pointer-events:auto}.scene-action{border:1px solid #35505d80;border-radius:7px;background:#0b1926b8;color:#b6ccd3;font-size:13px;padding:10px 12px;white-space:nowrap;backdrop-filter:blur(12px)}.scene-action:hover,.dock-button:hover{background:#213743;color:#e2fff5}svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.head-controls{position:absolute;top:128px;left:32px;width:280px;padding:18px;background:#0c1b26d9;border:1px solid #38545e80;border-radius:12px;backdrop-filter:blur(16px)}.eyebrow{font-size:11px;letter-spacing:1.4px;color:var(--accent)}.head-controls h2{font-size:19px;font-weight:550;letter-spacing:-.4px;margin:8px 0 0}.head-controls p{font-size:13px;line-height:1.6;color:#a8bec8;margin:12px 0 14px}.webcam-button{width:100%;padding:11px 14px;background:var(--accent);color:#092e2a;border:1px solid var(--accent);border-radius:7px;font-size:15px;font-weight:650}.webcam-button:hover{background:#b1f6e4}.webcam-button[aria-pressed=true]{background:#193d3d;color:#bcf3e6;border-color:#4b8f84}.head-control-options{display:flex;align-items:center;gap:8px;margin-top:10px}.head-controls select{min-width:0;flex:1;font-size:13px;padding:10px 26px 10px 8px;border:1px solid #304955;border-radius:6px;color:#d1e5e9;appearance:none;background:#12232e url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%239db8c3' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E") no-repeat right 8px center}.tiny-status{font-size:12px;line-height:1.5;color:#9ab5c0;margin-top:12px;overflow-wrap:anywhere}.tiny-status.on{color:#9ce3cb}.head-controls .camera-help{font-size:12px;color:#7e9ca8;margin-bottom:0}#hideInterface{width:100%;margin-top:12px}
+.playback-dock{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:5px;padding:6px;background:#0b1924d9;border:1px solid #36525e80;border-radius:12px;backdrop-filter:blur(16px);white-space:nowrap}.primary-button{border:0;background:var(--accent);color:#082b29;padding:11px 17px;border-radius:7px;font-size:14px;font-weight:600;min-width:88px}.primary-button:hover{background:#b1f6e4}.dock-button{border:0;background:transparent;color:#b7ccd5;border-radius:7px;padding:11px 13px;font-size:14px;min-height:42px}.dock-button svg{vertical-align:middle}.dock-divider{height:22px;width:1px;background:var(--line);margin:0 3px}
+.data-panel{position:absolute;z-index:3;top:86px;right:32px;width:min(350px,calc(100% - 32px));max-height:calc(100dvh - 180px);overflow-y:auto;padding:20px;background:#0b1925f2;border:1px solid #36525e;border-radius:12px;backdrop-filter:blur(16px)}.data-panel header{display:flex;align-items:center;justify-content:space-between}.data-panel h2{font-size:18px;font-weight:500;margin:0}.close-button{background:none;border:0;color:var(--muted);font-size:24px;padding:0 4px}.compute-status{display:flex;justify-content:space-between;font-size:11px;color:#93cfc5;margin:20px 0}.metrics{display:grid;grid-template-columns:1fr 1fr;gap:20px 14px}.metric-name{font-size:12px;color:var(--muted)}.metric-value{font:20px ui-monospace,monospace;color:#d4f7ef;margin-top:6px}.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;margin:24px 0 14px}.terrain-key{color:#c78dc5}.trail-key{color:#84eacb}.data-note{font-size:11px;color:#89a3af;line-height:1.6}.data-panel>.scene-action{margin-top:8px}.loading-screen{position:absolute;z-index:4;inset:0;display:grid;place-items:center;background:#08131de8;color:#b3eae3;font:14px ui-monospace,monospace}.loading-screen.hidden{visibility:hidden;pointer-events:none}.toast{position:absolute;bottom:100px;right:32px;max-width:min(370px,calc(100% - 32px));color:#d4e9e8;background:#142e39ed;border:1px solid #3c6873;padding:13px 16px;border-radius:8px;font-size:14px;line-height:1.5;opacity:0;pointer-events:none;transition:opacity .2s}.toast.visible{opacity:1}
+@media(max-width:700px){.topbar{padding:20px 16px}.scene-identity h1{font-size:18px}.top-title{font-size:10px;letter-spacing:1px}.scene-action{padding:9px;font-size:12px}.top-actions{gap:5px}.head-controls{top:104px;left:16px;width:252px;padding:14px}.head-controls h2{font-size:17px}.head-controls p{font-size:12px;margin:9px 0}.head-controls .camera-help{font-size:11px}.tiny-status{font-size:11px}.head-control-options .scene-action{font-size:12px}.head-controls select{font-size:12px}.data-panel{right:16px;top:80px}.playback-dock{bottom:20px;max-width:calc(100% - 24px);gap:2px;padding:5px}.dock-button{font-size:13px;padding:10px}.primary-button{min-width:80px;padding:11px 12px}.toast{right:16px;font-size:13px}}
+@media(max-height:550px){.head-controls{top:85px;padding:12px}.head-controls>p:not(.camera-help){display:none}.head-controls h2{font-size:16px;margin-bottom:12px}.head-controls .camera-help{font-size:11px}.topbar{padding-top:14px}.playback-dock{left:auto;right:20px;transform:none;bottom:20px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+</style>
+</head>
+<body>
+  <main class="viewport">
+    <canvas id="scene" tabindex="0" aria-label="Spatial trail clouds. Press Escape or tap to reveal controls when the webcam is active."></canvas>
+    <video id="cameraVideo" autoplay playsinline muted aria-hidden="true" tabindex="-1"></video>
+    <div id="interface">
+      <header class="topbar">
+        <div class="scene-identity"><h1>Volumetric <span>Pathways</span></h1><div class="top-title"><span id="livePulse" class="live-pulse"></span><span id="simulationStatus">TRACES IN MOTION</span></div></div>
+        <div class="top-actions"><button id="newWorld" class="scene-action">New field</button><button id="dataToggle" class="scene-action" aria-expanded="false" aria-controls="dataPanel">Data</button></div>
+      </header>
+      <section id="dataPanel" class="data-panel" aria-label="Simulation data" hidden>
+        <header><h2>Field data</h2><button id="closeData" class="close-button" aria-label="Close data">×</button></header>
+        <div class="compute-status"><span id="computeBadge">INITIALIZING</span><span id="fpsBadge">— FPS</span></div>
+        <div class="metrics">
+          <div><div class="metric-name">Volume nodes</div><div id="nodesMetric" class="metric-value">—</div></div>
+          <div><div class="metric-name">Successful trips</div><div id="routesMetric" class="metric-value">—</div></div>
+          <div><div class="metric-name">Network coverage</div><div id="coverageMetric" class="metric-value">—</div></div>
+          <div><div class="metric-name">Last search</div><div id="searchMetric" class="metric-value">—</div></div>
+        </div>
+        <p class="legend"><span class="terrain-key">Resistance density</span><span class="trail-key">Fading motion trails</span></p>
+        <p id="annotation" class="data-note"></p><p id="footerNodeInfo" class="data-note"></p><p id="footerProgress" class="data-note"></p>
+        <button id="clearMemory" class="scene-action">Clear memory</button>
+      </section>
+      <section id="headControls" class="head-controls" aria-labelledby="headControlTitle">
+        <div class="eyebrow">WEBCAM CONTROL</div><h2 id="headControlTitle">Move into the space.</h2>
+        <p>Lean closer to move in. Lean back to move out. Your video stays on this device.</p>
+        <button id="cameraToggle" class="webcam-button" aria-pressed="false" aria-describedby="cameraStatus cameraHelp">Enable webcam</button>
+        <div class="head-control-options"><select id="viewMode" aria-label="Head-tracking view mode"><option value="window">Head translation</option><option value="orbit">Head-driven orbit</option></select><button id="calibrate" class="scene-action" disabled>Center view</button></div>
+        <div id="cameraStatus" class="tiny-status" role="status">Ready for head tracking.</div>
+        <p id="cameraHelp" class="camera-help">Controls disappear when connected. Press Esc or tap the scene to bring them back. Press C to recenter.</p>
+        <button id="hideInterface" class="scene-action" hidden>Return to the space</button>
+      </section>
+      <nav class="playback-dock" aria-label="Simulation controls"><button id="runButton" class="primary-button" aria-pressed="true">Pause</button><button id="stepButton" class="dock-button">Step</button><span class="dock-divider"></span><button id="resetView" class="dock-button">Reset view</button><button id="fullscreenButton" class="dock-button" aria-label="Enter full screen" title="Enter full screen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></button></nav>
+      <div id="loading" class="loading-screen"><div>Preparing the space…</div></div>
+      <div id="toast" class="toast" role="status"></div>
+    </div>
+  </main>
+  <script>
+/* VOLUME / PATHS — real 3D graph & evolving resistance field.
+   Node index: x + n*(y + n*z). Z is vertical. No adjacency list is stored. */
+(() => {
+  'use strict';
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const smooth = t => t*t*(3-2*t);
+  const lerp = (a,b,t) => a+(b-a)*t;
+  function hash3(x,y,z,seed) {
+    let v = Math.imul(x, 374761393) ^ Math.imul(y, 668265263) ^ Math.imul(z, 2147483647) ^ seed;
+    v = Math.imul(v ^ (v >>> 13), 1274126177);
+    return ((v ^ (v >>> 16)) >>> 0) / 4294967295;
+  }
+  function noise3(x,y,z,seed) {
+    const a = Math.floor(x), b = Math.floor(y), c = Math.floor(z);
+    const dx = smooth(x-a), dy = smooth(y-b), dz = smooth(z-c);
+    const n000=hash3(a,b,c,seed), n100=hash3(a+1,b,c,seed),
+          n010=hash3(a,b+1,c,seed), n110=hash3(a+1,b+1,c,seed),
+          n001=hash3(a,b,c+1,seed), n101=hash3(a+1,b,c+1,seed),
+          n011=hash3(a,b+1,c+1,seed), n111=hash3(a+1,b+1,c+1,seed);
+    return lerp(lerp(lerp(n000,n100,dx),lerp(n010,n110,dx),dy),
+                lerp(lerp(n001,n101,dx),lerp(n011,n111,dx),dy),dz);
+  }
+  function fbm(x,y,z,seed,frequency) {
+    let v=0, sum=0, amplitude=1, f=frequency;
+    for(let i=0;i<4;i++) {
+      v+= noise3(x*f+17.2,y*f+9.9,z*f+33.3,seed+i*11011)*amplitude;
+      sum+=amplitude; amplitude*=0.48; f*=2.07;
+    }
+    return v/sum;
+  }
+  function buildMoves(connectivity) {
+    const moves=[];
+    for(let dz=-1; dz<=1;dz++)for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+      if(!dx&&!dy&&!dz)continue;
+      const dims=Number(dx!==0)+Number(dy!==0)+Number(dz!==0);
+      if(connectivity===6 && dims>1)continue;
+      moves.push({dx,dy,dz,length:Math.hypot(dx,dy,dz), knight:false, type:dims===1?0:1});
+    }
+    if(connectivity===50){
+      for(let ax=0;ax<3;ax++)for(let bx=0;bx<3;bx++){
+        if(ax===bx) continue;
+        for(const sa of [-1,1])for(const sb of [-1,1]){
+          const q=[0,0,0];q[ax]=2*sa;q[bx]=sb;
+          moves.push({dx:q[0],dy:q[1],dz:q[2],length:Math.sqrt(5),knight:true,type:2});
+        }
+      }
+    }
+    return moves;
+  }
+  class MinHeap {
+    constructor(){this.ids=[];this.vals=[];this.size=0;}
+    clear(){this.size=0;}
+    push(id,val) {
+      let k=this.size++; const ids=this.ids,v=this.vals;
+      while(k>0){const p=(k-1)>>1;if(v[p]<=val)break;ids[k]=ids[p];v[k]=v[p];k=p;}
+      ids[k]=id;v[k]=val;
+    }
+    pop(){
+      const n=this.size,ids=this.ids,v=this.vals; if(!n)return -1;
+      const first=ids[0],tail=ids[n-1],tailv=v[n-1];this.size=n-1;
+      if(n>1){let k=0;while(true){let c=k*2+1;if(c>=n-1)break;
+          if(c+1<n-1&&v[c+1]<v[c])c++;
+          if(v[c]>=tailv)break;ids[k]=ids[c];v[k]=v[c];k=c;
+        }ids[k]=tail;v[k]=tailv;
+      }
+      return first;
+    }
+  }
+  class VolumeSimulation {
+    constructor(opts={}) {
+      this.n=opts.n||40; this.seed=opts.seed||733;
+      this.roughness=opts.roughness??.65;this.barriers=opts.barriers??.18;
+      this.connectivity=opts.connectivity||50;
+      this.moves=buildMoves(this.connectivity);
+      this.climb=opts.climb??2;this.learning=opts.learning??.8;this.hubBias=opts.hubBias??.65;
+      this.fast=opts.fast!==false;
+      this.count=this.n*this.n*this.n;
+      this.base=new Float32Array(this.count);
+      this.solid=new Uint8Array(this.count);
+      this.traffic=new Float32Array(this.count);
+      this.scratch=new Float32Array(this.count);
+      this.g=new Float32Array(this.count);
+      this.previous=new Int32Array(this.count);
+      this.seen=new Uint32Array(this.count);
+      this.closed=new Uint32Array(this.count);
+      this.stamp=0;this.heap=new MinHeap();
+      this.tripCount=0;this.attempts=0;this.lastVisited=0;this.lastCost=0;this.lastPath=null;
+      this.generate();
+    }
+    index(x,y,z){return x+this.n*(y+this.n*z);}
+    xyz(i){const n=this.n;return [i%n,Math.floor(i/n)%n,Math.floor(i/(n*n))];}
+    xyzPosition(i){const [x,y,z]=this.xyz(i),fac=14/(this.n-1);return [(x-(this.n-1)/2)*fac,(y-(this.n-1)/2)*fac,(z-(this.n-1)/2)*fac];}
+    generate(){
+      const n=this.n,inv=1/(n-1),seed=this.seed, rough=this.roughness;
+      const frequency=2.4+rough*2.9;
+      let solids=0;let min=Infinity,max=-Infinity,mean=0;
+      for(let z=0;z<n;z++) for(let y=0;y<n;y++)for(let x=0;x<n;x++){
+        const i=this.index(x,y,z); const px=x*inv,py=y*inv,pz=z*inv;
+        const a=fbm(px,py,pz,seed,frequency);
+        const b=noise3(px*2.1+9.1,py*2.1+16.9,pz*2.1+3.6,seed+99);
+        const signal=clamp(a*.76+b*.24,0,1);
+        // Positive, continuous 3D permeability landscape. Rich high-resistance pockets.
+        const resistance=.43+1.25*Math.pow(signal/.64,3.0)+.48*Math.abs(Math.sin(4.2*signal+5.1*pz));
+        this.base[i]=resistance;
+        // Solid geometry is genuinely volumetric, not a heightfield.
+        const isSolid = signal>(.675-this.barriers*.27) && this.barriers>0.005;
+        if(isSolid){this.solid[i]=1;solids++;}
+        min=Math.min(min,resistance);max=Math.max(max,resistance);mean+=resistance;
+      }
+      this.solidCount=solids;this.minResistance=min;this.maxResistance=max;this.meanResistance=mean/this.count;
+      this.traffic.fill(0);this.scratch.fill(0);this.tripCount=0;this.attempts=0;
+      this.makeHubs();
+    }
+    makeHubs(){
+      this.hubs=[];const n=this.n;
+      for(let k=0;k<8;k++){
+        let found=-1;
+        for(let tries=0;tries<400;tries++){
+          const i=this.index(Math.floor(Math.random()*n),Math.floor(Math.random()*n),Math.floor(Math.random()*n));
+          if(this.solid[i])continue;
+          const [x,y,z]=this.xyz(i);
+          if(this.hubs.every(j=>{const [u,v,w]=this.xyz(j);return Math.hypot(x-u,y-v,z-w)>n*.28;})){found=i;break;}
+        }
+        if(found>=0)this.hubs.push(found);
+      }
+    }
+    chooseFreeNear(hub,radius){
+      const n=this.n; const [hx,hy,hz]=this.xyz(hub);
+      for(let t=0;t<35;t++){
+        const x=clamp(Math.round(hx+(Math.random()-.5)*radius),0,n-1);
+        const y=clamp(Math.round(hy+(Math.random()-.5)*radius),0,n-1);
+        const z=clamp(Math.round(hz+(Math.random()-.5)*radius),0,n-1);
+        const i=this.index(x,y,z);if(!this.solid[i])return i;
+      }
+      return hub;
+    }
+    randomFree(){
+      for(let t=0;t<200;t++){const i=Math.floor(Math.random()*this.count);if(!this.solid[i])return i;}
+      return 0;
+    }
+    trip(){
+      let a,b;const chooseHub=this.hubs.length>=2 && Math.random()<this.hubBias;
+      if(chooseHub){
+        const ai=Math.floor(Math.random()*this.hubs.length),bi=(ai+1+Math.floor(Math.random()*(this.hubs.length-1)))%this.hubs.length;
+        a=this.chooseFreeNear(this.hubs[ai],Math.max(2,this.n*.08));
+        b=this.chooseFreeNear(this.hubs[bi],Math.max(2,this.n*.08));
+      } else {a=this.randomFree();b=this.randomFree();}
+      const [ax,ay,az]=this.xyz(a),[bx,by,bz]=this.xyz(b);
+      if(Math.hypot(ax-bx,ay-by,az-bz)<this.n*.25)b=this.randomFree();
+      return [a,b];
+    }
+    setConnectivity(c){this.connectivity=c;this.moves=buildMoves(c);}
+    // Continuous trilinear interpolation of the discretized 3D resistance field.
+    // Essential for long 3D knight edges: endpoints alone can miss an expensive pocket.
+    sampleResistance(x,y,z){
+      const n=this.n,c=this.base;
+      const x0=Math.floor(x),y0=Math.floor(y),z0=Math.floor(z);
+      const x1=Math.min(n-1,x0+1),y1=Math.min(n-1,y0+1),z1=Math.min(n-1,z0+1);
+      const fx=x-x0,fy=y-y0,fz=z-z0;
+      const a=x0+n*(y0+n*z0),b=x1+n*(y0+n*z0),
+            d=x0+n*(y1+n*z0),e=x1+n*(y1+n*z0),
+            f=x0+n*(y0+n*z1),g=x1+n*(y0+n*z1),
+            h=x0+n*(y1+n*z1),j=x1+n*(y1+n*z1);
+      const q0=lerp(lerp(c[a],c[b],fx),lerp(c[d],c[e],fx),fy);
+      const q1=lerp(lerp(c[f],c[g],fx),lerp(c[h],c[j],fx),fy);
+      return lerp(q0,q1,fz);
+    }
+    // Candidate passes through sampled swept voxels: knight transitions cannot tunnel through solids.
+    segmentClear(x,y,z,dx,dy,dz){
+      const steps=Math.max(Math.abs(dx),Math.abs(dy),Math.abs(dz))*4;
+      for(let s=1;s<steps;s++){
+        const t=s/steps,ix=Math.round(x+dx*t),iy=Math.round(y+dy*t),iz=Math.round(z+dz*t);
+        if(this.solid[this.index(ix,iy,iz)])return false;
+      }
+      return true;
+    }
+    findPath(start,target) {
+      this.attempts++;
+      if(start===target||this.solid[start]||this.solid[target])return null;
+      let stamp=++this.stamp;
+      if(stamp===0xffffffff){this.seen.fill(0);this.closed.fill(0);this.stamp=stamp=1;}
+      const n=this.n, n2=n*n, base=this.base,traffic=this.traffic, solid=this.solid, seen=this.seen,closed=this.closed,g=this.g,prev=this.previous;
+      const tx=target%n,ty=Math.floor(target/n)%n,tz=Math.floor(target/n2);
+      const heuristicBase=this.fast?1.55:0.085;
+      const heuristic=(x,y,z)=>heuristicBase*Math.hypot(x-tx,y-ty,z-tz);
+      this.heap.clear();this.heap.push(start,heuristic(start%n,Math.floor(start/n)%n,Math.floor(start/n2)));
+      seen[start]=stamp;g[start]=0;prev[start]=-1;
+      let visited=0,found=false;
+      const limit=this.fast?Math.min(this.count,60000):this.count;
+      while(this.heap.size && visited<limit){
+        const cur=this.heap.pop();if(closed[cur]===stamp)continue;closed[cur]=stamp;visited++;
+        if(cur===target){found=true;break;}
+        const x=cur%n,y=Math.floor(cur/n)%n,z=Math.floor(cur/n2);
+        for(let m=0;m<this.moves.length;m++){
+          const step=this.moves[m],xx=x+step.dx,yy=y+step.dy,zz=z+step.dz;
+          if(xx<0||yy<0||zz<0||xx>=n||yy>=n||zz>=n)continue;
+          const ni=xx+n*(yy+n*zz);
+          if(solid[ni]||closed[ni]===stamp)continue;
+          // Boundary-crossing validity matters especially for knight and diagonal moves.
+          if((step.knight||step.type===1)&&!this.segmentClear(x,y,z,step.dx,step.dy,step.dz))continue;
+          // Simpson quadrature along the actual 3D segment; all move types
+          // pay for the material between the nodes, not just their endpoints.
+          const midpointResistance=(base[cur]+4*this.sampleResistance(x+step.dx*.5,y+step.dy*.5,z+step.dz*.5)+base[ni])/6;
+          const up=Math.max(0,step.dz)/step.length, vertical=Math.abs(step.dz)/step.length;
+          const gradeFactor=1+this.climb*(.35*vertical+.65*up);
+          const reinforcement=0.20+0.80*Math.exp(-this.learning*(traffic[cur]+traffic[ni])*.32);
+          const edgeCost=step.length*midpointResistance*gradeFactor*reinforcement;
+          const tentative=g[cur]+edgeCost;
+          if(seen[ni]!==stamp||tentative<g[ni]){
+            seen[ni]=stamp;g[ni]=tentative;prev[ni]=cur;
+            this.heap.push(ni,tentative+heuristic(xx,yy,zz));
+          }
+        }
+      }
+      this.lastVisited=visited;
+      if(!found){this.lastPath=null;return null;}
+      let cur=target;const path=[];
+      while(cur>=0&&path.length<=this.count){path.push(cur);cur=prev[cur];}
+      path.reverse();this.lastPath=path;this.lastCost=g[target];
+      this.tripCount++;
+      // Trace memory deposits; each segment influences a small 3D neighborhood.
+      for(let p=0;p<path.length;p++){
+        const j=path[p];this.traffic[j]=Math.min(22,this.traffic[j]+.30);
+        const [x,y,z]=this.xyz(j);
+        const offsets=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+        for(let k=0;k<6;k++){
+          const q=offsets[k],xx=x+q[0],yy=y+q[1],zz=z+q[2];
+          if(xx<0||yy<0||zz<0||xx>=n||yy>=n||zz>=n)continue;
+          const ni=this.index(xx,yy,zz);if(!solid[ni])this.traffic[ni]=Math.min(22,this.traffic[ni]+.045);
+        }
+      }
+      return {path,cost:this.lastCost,visited,length:path.length,start,target};
+    }
+    step(){for(let attempt=0;attempt<3;attempt++){const [a,b]=this.trip(),route=this.findPath(a,b);if(route)return route;}return null;}
+    diffuseCPU(keep=.97,spread=.09) {
+      const n=this.n,n2=n*n,a=this.traffic,b=this.scratch,solid=this.solid;
+      let i=0;
+      for(let z=0;z<n;z++)for(let y=0;y<n;y++)for(let x=0;x<n;x++,i++){
+        if(solid[i]){b[i]=0;continue;}
+        const center=a[i];let sum=0,k=0;
+        if(x>0&&!solid[i-1]){sum+=a[i-1];k++} if(x<n-1&&!solid[i+1]){sum+=a[i+1];k++}
+        if(y>0&&!solid[i-n]){sum+=a[i-n];k++} if(y<n-1&&!solid[i+n]){sum+=a[i+n];k++}
+        if(z>0&&!solid[i-n2]){sum+=a[i-n2];k++} if(z<n-1&&!solid[i+n2]){sum+=a[i+n2];k++}
+        b[i]=Math.max(0,center*keep+spread*(sum-k*center));
+      }
+      this.traffic=b;this.scratch=a;
+    }
+    coverage(){
+      let active=0,free=0;
+      for(let i=0;i<this.count;i++){if(this.solid[i])continue;free++;if(this.traffic[i]>.14)active++;}
+      return free?active/free:0;
+    }
+  }
+  window.VolumeSimulation=VolumeSimulation;
+  window.build3DMoves=buildMoves;
+})();
+
+</script>
+  <script>
+/* WebGPU accelerates field diffusion only; A* remains on the CPU. */
+(function () {
+  'use strict';
+  const diffusionShader = `
+    struct Parameters {
+      resolution: u32,
+      nodeCount: u32,
+      retentionFactor: f32,
+      diffusionFactor: f32,
+    }
+    @group(0) @binding(0) var<storage, read> inputValues: array<f32>;
+    @group(0) @binding(1) var<storage, read_write> outputValues: array<f32>;
+    @group(0) @binding(2) var<storage, read> solidNodes: array<u32>;
+    @group(0) @binding(3) var<uniform> parameters: Parameters;
+    @compute @workgroup_size(256)
+    fn main(@builtin(global_invocation_id) invocation: vec3<u32>) {
+      let nodeIndex = invocation.x;
+      if (nodeIndex >= parameters.nodeCount) { return; }
+      if (solidNodes[nodeIndex] != 0u) { outputValues[nodeIndex] = 0.0; return; }
+      let resolution = parameters.resolution;
+      let planeSize = resolution * resolution;
+      let positionX = nodeIndex % resolution;
+      let positionY = (nodeIndex / resolution) % resolution;
+      let positionZ = nodeIndex / planeSize;
+      var neighborSum = 0.0;
+      var neighborCount = 0.0;
+      if (positionX > 0u && solidNodes[nodeIndex - 1u] == 0u) {
+        neighborSum += inputValues[nodeIndex - 1u]; neighborCount += 1.0;
+      }
+      if (positionX + 1u < resolution && solidNodes[nodeIndex + 1u] == 0u) {
+        neighborSum += inputValues[nodeIndex + 1u]; neighborCount += 1.0;
+      }
+      if (positionY > 0u && solidNodes[nodeIndex - resolution] == 0u) {
+        neighborSum += inputValues[nodeIndex - resolution]; neighborCount += 1.0;
+      }
+      if (positionY + 1u < resolution && solidNodes[nodeIndex + resolution] == 0u) {
+        neighborSum += inputValues[nodeIndex + resolution]; neighborCount += 1.0;
+      }
+      if (positionZ > 0u && solidNodes[nodeIndex - planeSize] == 0u) {
+        neighborSum += inputValues[nodeIndex - planeSize]; neighborCount += 1.0;
+      }
+      if (positionZ + 1u < resolution && solidNodes[nodeIndex + planeSize] == 0u) {
+        neighborSum += inputValues[nodeIndex + planeSize]; neighborCount += 1.0;
+      }
+      let centerValue = inputValues[nodeIndex];
+      outputValues[nodeIndex] = max(0.0, centerValue * parameters.retentionFactor +
+        parameters.diffusionFactor * (neighborSum - neighborCount * centerValue));
+    }
+  `;
+  class VolumeGpuDiffuser {
+    constructor(device, resolution, onFailure) {
+      this.device = device;
+      this.resolution = resolution;
+      this.nodeCount = resolution ** 3;
+      this.byteLength = this.nodeCount * 4;
+      this.buffers = [];
+      this.destroyed = false;
+      this.busy = false;
+      this.failure = null;
+      const diffuser = this;
+      device.lost.then(function (information) {
+        if (!diffuser.destroyed) diffuser.fail(new Error(information.message || 'WebGPU device lost.'), onFailure);
+      });
+      device.addEventListener('uncapturederror', function (event) {
+        event.preventDefault();
+        if (!diffuser.destroyed) diffuser.fail(event.error, onFailure);
+      });
+    }
+    fail(error, onFailure) {
+      if (this.failure) return;
+      this.failure = error;
+      if (onFailure) onFailure(error, this);
+    }
+    createBuffer(label, size, usage) {
+      const buffer = this.device.createBuffer({label: label, size: size, usage: usage});
+      this.buffers.push(buffer);
+      return buffer;
+    }
+    async initialize(solidNodes) {
+      const device = this.device;
+      device.pushErrorScope('validation');
+      try {
+        this.input = this.createBuffer('Traffic input', this.byteLength, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST);
+        this.output = this.createBuffer('Diffused traffic', this.byteLength, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);
+        this.barriers = this.createBuffer('Solid voxels', this.byteLength, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST);
+        this.uniform = this.createBuffer('Diffusion parameters', 16, GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST);
+        this.readback = this.createBuffer('Traffic readback', this.byteLength, GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ);
+        device.queue.writeBuffer(this.barriers, 0, Uint32Array.from(solidNodes));
+        const shader = device.createShaderModule({label: 'Six-neighbor volumetric diffusion', code: diffusionShader});
+        const compilation = await shader.getCompilationInfo();
+        const errors = compilation.messages.filter(function (message) { return message.type === 'error'; });
+        if (errors.length) throw new Error(errors.map(function (message) { return message.message; }).join('\n'));
+        this.pipeline = await device.createComputePipelineAsync({layout: 'auto', compute: {module: shader, entryPoint: 'main'}});
+        this.bindGroup = device.createBindGroup({layout: this.pipeline.getBindGroupLayout(0), entries: [
+          {binding: 0, resource: {buffer: this.input}}, {binding: 1, resource: {buffer: this.output}},
+          {binding: 2, resource: {buffer: this.barriers}}, {binding: 3, resource: {buffer: this.uniform}}
+        ]});
+      } finally {
+        const validationError = await device.popErrorScope();
+        if (validationError) throw new Error(validationError.message);
+      }
+      if (this.failure) throw this.failure;
+    }
+    async diffuse(traffic, retentionFactor, diffusionFactor) {
+      if (this.destroyed || this.failure) throw this.failure || new Error('WebGPU diffuser has been disposed.');
+      if (this.busy) throw new Error('A diffusion pass is already in progress.');
+      if (traffic.length !== this.nodeCount) throw new Error('Traffic grid does not match GPU buffer size.');
+      this.busy = true;
+      const device = this.device;
+      device.pushErrorScope('validation');
+      try {
+        device.queue.writeBuffer(this.input, 0, traffic);
+        const parameters = new ArrayBuffer(16);
+        const parameterView = new DataView(parameters);
+        parameterView.setUint32(0, this.resolution, true);
+        parameterView.setUint32(4, this.nodeCount, true);
+        parameterView.setFloat32(8, retentionFactor, true);
+        parameterView.setFloat32(12, diffusionFactor, true);
+        device.queue.writeBuffer(this.uniform, 0, parameters);
+        const encoder = device.createCommandEncoder();
+        const pass = encoder.beginComputePass();
+        pass.setPipeline(this.pipeline);
+        pass.setBindGroup(0, this.bindGroup);
+        pass.dispatchWorkgroups(Math.ceil(this.nodeCount / 256));
+        pass.end();
+        encoder.copyBufferToBuffer(this.output, 0, this.readback, 0, this.byteLength);
+        device.queue.submit([encoder.finish()]);
+        await this.readback.mapAsync(GPUMapMode.READ);
+        return new Float32Array(this.readback.getMappedRange().slice(0));
+      } finally {
+        if (this.readback.mapState === 'mapped') this.readback.unmap();
+        this.busy = false;
+        const validationError = await device.popErrorScope();
+        if (validationError) throw new Error(validationError.message);
+      }
+    }
+    destroy() {
+      if (this.destroyed) return;
+      this.destroyed = true;
+      for (const buffer of this.buffers) buffer.destroy();
+      this.device.destroy();
+    }
+    static async create(resolution, solidNodes, onFailure) {
+      if (!navigator.gpu || !window.isSecureContext) return null;
+      let diffuser = null;
+      try {
+        const adapter = await navigator.gpu.requestAdapter({powerPreference: 'high-performance'});
+        if (!adapter) return null;
+        const device = await adapter.requestDevice();
+        diffuser = new VolumeGpuDiffuser(device, resolution, onFailure);
+        await diffuser.initialize(solidNodes);
+        return diffuser;
+      } catch (error) {
+        if (diffuser) diffuser.destroy();
+        console.warn('WebGPU unavailable; continuing with CPU diffusion.', error);
+        return null;
+      }
+    }
+  }
+  window.VolumeGpuDiffuser = VolumeGpuDiffuser;
+})();
+
+</script>
+  <script>
+/* Shared spatial geometry and camera behavior for WebGL and Canvas renderers. */
+(function () {
+  'use strict';
+  function clamp(value, minimum, maximum) { return Math.max(minimum, Math.min(maximum, value)); }
+  function randomFactor(seed) {
+    let mixedSeed = Math.imul(seed ^ 1597334677, 2246822519);
+    mixedSeed = Math.imul(mixedSeed ^ (mixedSeed >>> 13), 3266489917);
+    return ((mixedSeed ^ (mixedSeed >>> 16)) >>> 0) / 4294967296;
+  }
+  function normalize(vector) {
+    const length = Math.hypot(...vector) || 1;
+    return vector.map(function (coordinate) { return coordinate / length; });
+  }
+  function cross(left, right) {
+    return [left[1] * right[2] - left[2] * right[1], left[2] * right[0] - left[0] * right[2], left[0] * right[1] - left[1] * right[0]];
+  }
+  function dot(left, right) { return left[0] * right[0] + left[1] * right[1] + left[2] * right[2]; }
+  function multiplyMatrices(left, right) {
+    const result = new Float32Array(16);
+    for (let column = 0; column < 4; column++) for (let row = 0; row < 4; row++) {
+      result[column * 4 + row] = left[row] * right[column * 4] + left[4 + row] * right[column * 4 + 1] + left[8 + row] * right[column * 4 + 2] + left[12 + row] * right[column * 4 + 3];
+    }
+    return result;
+  }
+  function perspective(fieldOfViewRadians, aspectRatio) {
+    const focalFactor = 1 / Math.tan(fieldOfViewRadians / 2), nearDistance = .04, farDistance = 180;
+    const depthFactor = 1 / (nearDistance - farDistance);
+    return new Float32Array([focalFactor / aspectRatio, 0, 0, 0, 0, focalFactor, 0, 0, 0, 0, (farDistance + nearDistance) * depthFactor, -1, 0, 0, 2 * farDistance * nearDistance * depthFactor, 0]);
+  }
+  function lookAt(eye, target) {
+    const backward = normalize(eye.map(function (coordinate, axis) { return coordinate - target[axis]; }));
+    const right = normalize(cross([0, 0, 1], backward)), upward = cross(backward, right);
+    return new Float32Array([right[0], upward[0], backward[0], 0, right[1], upward[1], backward[1], 0, right[2], upward[2], backward[2], 0, -dot(right, eye), -dot(upward, eye), -dot(backward, eye), 1]);
+  }
+  function cameraPose(scene) {
+    const head = scene.headCurrent;
+    const tracking = scene.head.active;
+    const orbitTracking = tracking && scene.head.mode === 'orbit';
+    const yawRadians = scene.yaw + (orbitTracking ? head.x * .13 : 0);
+    const pitchRadians = clamp(scene.pitch + (orbitTracking ? head.y * .11 : 0), -1.48, 1.48);
+    // Actual camera translation, with constant perspective and constant world scale.
+    // At half the calibrated face distance the eye can enter the volume.
+    const distanceFactor = tracking ? Math.pow(clamp(head.d / 25, .45, 2), 3.2) : 1;
+    const cameraDistance = clamp(scene.radius * distanceFactor, 1.2, 95);
+    const backward = [Math.cos(pitchRadians) * Math.cos(yawRadians), Math.cos(pitchRadians) * Math.sin(yawRadians), Math.sin(pitchRadians)];
+    const right = [-Math.sin(yawRadians), Math.cos(yawRadians), 0];
+    const upward = cross(backward, right);
+    const lateralOffset = tracking && !orbitTracking ? right.map(function (coordinate, axis) { return coordinate * head.x + upward[axis] * head.y; }) : [0, 0, 0];
+    const target = scene.target.map(function (coordinate, axis) { return coordinate + lateralOffset[axis]; });
+    const eye = target.map(function (coordinate, axis) { return coordinate + backward[axis] * cameraDistance; });
+    return {eye: eye, target: target, distance: cameraDistance};
+  }
+  function appendVertex(vertices, position, color, opacity) {
+    vertices.push(position[0], position[1], position[2], color[0], color[1], color[2], opacity);
+  }
+  function smoothRoute(simulation, path) {
+    const coordinates = path.map(function (nodeIndex) { return simulation.xyzPosition(nodeIndex); });
+    if (coordinates.length < 2) return coordinates;
+    const samples = [coordinates[0]];
+    for (let segmentIndex = 0; segmentIndex < coordinates.length - 1; segmentIndex++) {
+      const before = coordinates[Math.max(0, segmentIndex - 1)], start = coordinates[segmentIndex];
+      const end = coordinates[segmentIndex + 1], after = coordinates[Math.min(coordinates.length - 1, segmentIndex + 2)];
+      const sampleCount = Math.max(3, Math.ceil(Math.hypot(...end.map(function (coordinate, axis) { return coordinate - start[axis]; })) / .10));
+      for (let sampleIndex = 1; sampleIndex <= sampleCount; sampleIndex++) {
+        const fraction = sampleIndex / sampleCount;
+        samples.push(start.map(function (coordinate, axis) {
+          return .5 * (2 * coordinate + (-before[axis] + end[axis]) * fraction + (2 * before[axis] - 5 * coordinate + 4 * end[axis] - after[axis]) * fraction ** 2 + (-before[axis] + 3 * coordinate - 3 * end[axis] + after[axis]) * fraction ** 3);
+        }));
+      }
+    }
+    return samples;
+  }
+  function terrainDensity(simulation, nodeIndex) {
+    const memoryFactor = .20 + .80 * Math.exp(-simulation.learning * simulation.traffic[nodeIndex] * .64);
+    const effectiveResistance = simulation.base[nodeIndex] * memoryFactor;
+    const resistanceSpan = Math.max(.001, simulation.maxResistance - simulation.minResistance);
+    return simulation.solid[nodeIndex] ? 1 : clamp((effectiveResistance - simulation.minResistance) / resistanceSpan, 0, 1);
+  }
+  class VolumeScene {
+    constructor(canvas, simulation) {
+      this.canvas = canvas; this.sim = simulation;
+      this.routes = []; this.terrainVertices = new Float32Array();
+      this.trailVertices = new Float32Array(); this.filamentVertices = new Float32Array();
+      this.yaw = -.94; this.pitch = .52; this.radius = 30; this.target = [0, 0, 0];
+      this.head = {active: false, mode: 'window', x: 0, y: 0, d: 25};
+      this.headCurrent = {x: 0, y: 0, d: 25};
+      this.width = 1; this.height = 1; this.pointer = null;
+      this.sceneTime = 0; this.animationPlaying = true; this.previousTimestamp = null;
+      this.lastTrailUpdate = -Infinity; this.terrainRevision = 0; this.trailRevision = 0;
+      this.attachMouse(); this.rebuild();
+    }
+    attachMouse() {
+      const scene = this, canvas = this.canvas;
+      canvas.addEventListener('pointerdown', function (event) {
+        scene.pointer = {x: event.clientX, y: event.clientY, button: event.button};
+        canvas.setPointerCapture(event.pointerId);
+      });
+      canvas.addEventListener('pointermove', function (event) {
+        if (!scene.pointer) return;
+        const horizontalPixels = event.clientX - scene.pointer.x, verticalPixels = event.clientY - scene.pointer.y;
+        scene.pointer.x = event.clientX; scene.pointer.y = event.clientY;
+        if (scene.pointer.button === 2 || event.ctrlKey || event.shiftKey) {
+          const worldDistancePerPixel = .017 * scene.radius / 28;
+          scene.target[0] += horizontalPixels * worldDistancePerPixel * Math.sin(scene.yaw);
+          scene.target[1] -= horizontalPixels * worldDistancePerPixel * Math.cos(scene.yaw);
+          scene.target[2] += verticalPixels * worldDistancePerPixel;
+        } else { scene.yaw -= horizontalPixels * .006; scene.pitch = clamp(scene.pitch + verticalPixels * .006, -1.48, 1.48); }
+      });
+      function releasePointer() { scene.pointer = null; }
+      canvas.addEventListener('pointerup', releasePointer);
+      canvas.addEventListener('pointercancel', releasePointer);
+      canvas.addEventListener('wheel', function (event) {
+        event.preventDefault(); scene.radius = clamp(scene.radius * Math.exp(event.deltaY * .001), 1.2, 85);
+      }, {passive: false});
+      canvas.addEventListener('contextmenu', function (event) { event.preventDefault(); });
+    }
+    rebuild() {
+      this.routes = []; this.sceneTime = 0; this.previousTimestamp = null;
+      this.updateMemory(); this.updateRoutes();
+    }
+    updateMemory() {
+      const vertices = [], simulation = this.sim;
+      const voxelWidth = 14 / (simulation.n - 1);
+      const stride = Math.max(1, Math.ceil(simulation.count / 26000));
+      for (let nodeIndex = 0; nodeIndex < simulation.count; nodeIndex += stride) {
+        const density = terrainDensity(simulation, nodeIndex);
+        const seed = nodeIndex ^ simulation.seed;
+        // More resistant voxels occupy more of the colored volume, with greater opacity.
+        if (randomFactor(seed) > .035 + .90 * density ** 1.35) continue;
+        const position = simulation.xyzPosition(nodeIndex).map(function (coordinate, axis) {
+          return coordinate + (randomFactor(seed + axis * 7963 + 101) - .5) * voxelWidth * .85;
+        });
+        appendVertex(vertices, position, [.60 + .18 * density, .25 + .07 * density, .57 + .20 * density], .025 + .16 * density ** 1.5);
+      }
+      this.terrainVertices = new Float32Array(vertices);
+      this.terrainRevision++;
+    }
+    addRoute(route) {
+      if (!route) return;
+      const samples = smoothRoute(this.sim, route.path);
+      if (samples.length < 2) return;
+      const travelTimes = [0];
+      const speed = 1.3 + randomFactor(route.start + route.target) * 1.5;
+      for (let sampleIndex = 1; sampleIndex < samples.length; sampleIndex++) {
+        const distance = Math.hypot(...samples[sampleIndex].map(function (coordinate, axis) { return coordinate - samples[sampleIndex - 1][axis]; }));
+        travelTimes.push(travelTimes[sampleIndex - 1] + distance / speed);
+      }
+      this.routes.push({samples: samples, travelTimes: travelTimes, born: this.sceneTime, seed: route.start * 113 + route.target, color: randomFactor(route.target) < .28 ? [1, .68, .32] : [.31, .94, .78]});
+      if (this.routes.length > 180) this.routes.shift();
+      this.lastTrailUpdate = -Infinity;
+    }
+    updateRoutes() {
+      this.trailVertices = new Float32Array(); this.filamentVertices = new Float32Array();
+      this.lastTrailUpdate = -Infinity; this.trailRevision++;
+    }
+    buildTrails() {
+      const vertices = [], filaments = [], sceneTime = this.sceneTime;
+      this.routes = this.routes.filter(function (route) { return sceneTime - route.born < route.travelTimes.at(-1) + 32; });
+      const totalSampleCount = this.routes.reduce(function (count, route) { return count + route.samples.length; }, 0);
+      const sampleStride = Math.max(1, Math.ceil(totalSampleCount * 3 / 42000));
+      for (const route of this.routes) {
+        for (let sampleIndex = 0; sampleIndex < route.samples.length; sampleIndex += sampleStride) {
+          const ageSeconds = sceneTime - route.born - route.travelTimes[sampleIndex];
+          if (ageSeconds < 0 || ageSeconds > 32) continue;
+          const fadeFactor = Math.exp(-ageSeconds / 9) * Math.min(1, (32 - ageSeconds) / 3);
+          const spreadDistance = .025 + Math.min(.34, ageSeconds * .015);
+          const center = route.samples[sampleIndex];
+          for (let particleIndex = 0; particleIndex < 3; particleIndex++) {
+            const seed = route.seed + sampleIndex * 43 + particleIndex * 131;
+            const position = center.map(function (coordinate, axis) {
+              const phase = randomFactor(seed + axis * 101) * Math.PI * 2;
+              return coordinate + Math.sin(phase) * spreadDistance + Math.sin(phase + ageSeconds * .36) * spreadDistance * .35;
+            });
+            appendVertex(vertices, position, route.color, fadeFactor * .26);
+          }
+          if (sampleIndex > 0 && ageSeconds < 7) {
+            appendVertex(filaments, route.samples[Math.max(0, sampleIndex - sampleStride)], route.color, fadeFactor * .13);
+            appendVertex(filaments, center, route.color, fadeFactor * .13);
+          }
+        }
+      }
+      this.trailVertices = new Float32Array(vertices); this.filamentVertices = new Float32Array(filaments);
+      this.trailRevision++;
+    }
+    advance(timestamp) {
+      const elapsedSeconds = this.previousTimestamp === null ? 0 : clamp((timestamp - this.previousTimestamp) / 1000, 0, .1);
+      this.previousTimestamp = timestamp;
+      if (this.animationPlaying) this.sceneTime += elapsedSeconds;
+      if (this.head.active) {
+        const smoothingFactor = 1 - Math.exp(-elapsedSeconds * 9);
+        for (const axis of ['x', 'y', 'd']) this.headCurrent[axis] += (this.head[axis] - this.headCurrent[axis]) * smoothingFactor;
+      }
+      if (this.sceneTime - this.lastTrailUpdate >= 1 / 30) {
+        this.lastTrailUpdate = this.sceneTime; this.buildTrails();
+      }
+    }
+    cameraMatrix() {
+      const aspectRatio = this.width / this.height;
+      const fieldOfViewRadians = 2 * Math.atan(Math.tan(.75 / 2) / Math.min(1, aspectRatio));
+      const pose = cameraPose(this);
+      return multiplyMatrices(perspective(fieldOfViewRadians, aspectRatio), lookAt(pose.eye, pose.target));
+    }
+  }
+  window.VolumeScene = VolumeScene;
+  window.VolumeVisuals = {cameraPose: cameraPose, terrainDensity: terrainDensity, clamp: clamp};
+  window.smoothVolumeRoute = smoothRoute;
+})();
+
+</script>
+  <script>
+/* Soft volumetric density and motion trails. No boundary frame or mover markers. */
+(function () {
+  'use strict';
+  function compileShader(context, type, source) {
+    const shader = context.createShader(type);
+    context.shaderSource(shader, source); context.compileShader(shader);
+    if (!context.getShaderParameter(shader, context.COMPILE_STATUS)) {
+      const message = context.getShaderInfoLog(shader); context.deleteShader(shader); throw new Error(message);
+    }
+    return shader;
+  }
+  function createProgram(context, pointSprites) {
+    const vertexShader = compileShader(context, context.VERTEX_SHADER, `#version 300 es
+      precision highp float;
+      layout(location=0) in vec3 position;
+      layout(location=1) in vec4 color;
+      uniform mat4 cameraMatrix;
+      uniform float pointSize;
+      uniform float opacity;
+      out vec4 particleColor;
+      void main() {
+        vec4 projected = cameraMatrix * vec4(position, 1.0);
+        gl_Position = projected;
+        gl_PointSize = clamp(pointSize * 32.0 / max(projected.w, .1), 1.0, 96.0);
+        float depthFade = exp(-max(projected.w, 0.0) * .018);
+        particleColor = vec4(color.rgb, color.a * opacity * depthFade);
+      }`);
+    const fragmentShader = compileShader(context, context.FRAGMENT_SHADER, `#version 300 es
+      precision mediump float;
+      in vec4 particleColor;
+      out vec4 outputColor;
+      void main() {
+        ${pointSprites ? 'float radius = length(gl_PointCoord - vec2(.5)) * 2.0; if (radius > 1.0) discard; float softness = exp(-radius * radius * 5.0) * (1.0 - smoothstep(.7, 1.0, radius)); outputColor = vec4(particleColor.rgb, particleColor.a * softness);' : 'outputColor = particleColor;'}
+      }`);
+    const program = context.createProgram();
+    context.attachShader(program, vertexShader); context.attachShader(program, fragmentShader); context.linkProgram(program);
+    context.deleteShader(vertexShader); context.deleteShader(fragmentShader);
+    if (!context.getProgramParameter(program, context.LINK_STATUS)) throw new Error(context.getProgramInfoLog(program));
+    return {program: program, cameraMatrix: context.getUniformLocation(program, 'cameraMatrix'), pointSize: context.getUniformLocation(program, 'pointSize'), opacity: context.getUniformLocation(program, 'opacity')};
+  }
+  class VolumeRenderer extends VolumeScene {
+    constructor(canvas, simulation) {
+      const context = canvas.getContext('webgl2', {antialias: true, alpha: false, powerPreference: 'high-performance'});
+      if (!context) return new window.CanvasVolumeRenderer(canvas, simulation);
+      super(canvas, simulation);
+      this.context = context;
+      this.pointsProgram = createProgram(context, true); this.linesProgram = createProgram(context, false);
+      this.terrainMesh = this.createMesh(); this.trailMesh = this.createMesh(); this.filamentMesh = this.createMesh();
+      this.uploadedTerrainRevision = -1; this.uploadedTrailRevision = -1;
+      context.enable(context.BLEND); context.blendFunc(context.SRC_ALPHA, context.ONE);
+      context.disable(context.DEPTH_TEST);
+      const renderer = this;
+      canvas.addEventListener('webglcontextlost', function (event) { event.preventDefault(); renderer.contextLost = true; });
+      canvas.addEventListener('webglcontextrestored', function () {
+        renderer.pointsProgram = createProgram(context, true); renderer.linesProgram = createProgram(context, false);
+        renderer.terrainMesh = renderer.createMesh(); renderer.trailMesh = renderer.createMesh(); renderer.filamentMesh = renderer.createMesh();
+        renderer.uploadedTerrainRevision = -1; renderer.uploadedTrailRevision = -1;
+        context.enable(context.BLEND); context.blendFunc(context.SRC_ALPHA, context.ONE); context.disable(context.DEPTH_TEST);
+        renderer.contextLost = false;
+      });
+    }
+    createMesh() { return {buffer: this.context.createBuffer(), count: 0}; }
+    upload(mesh, vertices) {
+      mesh.count = vertices.length / 7;
+      this.context.bindBuffer(this.context.ARRAY_BUFFER, mesh.buffer);
+      this.context.bufferData(this.context.ARRAY_BUFFER, vertices, this.context.DYNAMIC_DRAW);
+    }
+    resize() {
+      this.pixelRatio = Math.min(2, window.devicePixelRatio || 1);
+      this.width = Math.max(1, Math.floor(this.canvas.clientWidth * this.pixelRatio));
+      this.height = Math.max(1, Math.floor(this.canvas.clientHeight * this.pixelRatio));
+      if (this.canvas.width !== this.width || this.canvas.height !== this.height) {
+        this.canvas.width = this.width; this.canvas.height = this.height;
+      }
+      this.context.viewport(0, 0, this.width, this.height);
+    }
+    draw(mesh, program, mode, cameraMatrix, pointSize, opacity) {
+      if (!mesh.count) return;
+      const context = this.context;
+      context.useProgram(program.program);
+      context.uniformMatrix4fv(program.cameraMatrix, false, cameraMatrix);
+      context.uniform1f(program.pointSize, pointSize * this.pixelRatio);
+      context.uniform1f(program.opacity, opacity);
+      context.bindBuffer(context.ARRAY_BUFFER, mesh.buffer);
+      context.enableVertexAttribArray(0); context.enableVertexAttribArray(1);
+      context.vertexAttribPointer(0, 3, context.FLOAT, false, 28, 0);
+      context.vertexAttribPointer(1, 4, context.FLOAT, false, 28, 12);
+      context.drawArrays(mode, 0, mesh.count);
+    }
+    render(timestamp) {
+      this.advance(timestamp);
+      if (this.contextLost) return;
+      this.resize();
+      const context = this.context, cameraMatrix = this.cameraMatrix();
+      context.clearColor(.012, .024, .037, 1); context.clear(context.COLOR_BUFFER_BIT);
+      if (this.uploadedTerrainRevision !== this.terrainRevision) {
+        this.upload(this.terrainMesh, this.terrainVertices); this.uploadedTerrainRevision = this.terrainRevision;
+      }
+      if (this.uploadedTrailRevision !== this.trailRevision) {
+        this.upload(this.trailMesh, this.trailVertices); this.upload(this.filamentMesh, this.filamentVertices);
+        this.uploadedTrailRevision = this.trailRevision;
+      }
+      this.draw(this.terrainMesh, this.pointsProgram, context.POINTS, cameraMatrix, 11, .65);
+      this.draw(this.trailMesh, this.pointsProgram, context.POINTS, cameraMatrix, 13, .18);
+      this.draw(this.trailMesh, this.pointsProgram, context.POINTS, cameraMatrix, 4.5, .70);
+      this.draw(this.filamentMesh, this.linesProgram, context.LINES, cameraMatrix, 1, .65);
+    }
+    destroy() {
+      for (const mesh of [this.terrainMesh, this.trailMesh, this.filamentMesh]) this.context.deleteBuffer(mesh.buffer);
+      this.context.deleteProgram(this.pointsProgram.program); this.context.deleteProgram(this.linesProgram.program);
+    }
+  }
+  window.VolumeRenderer = VolumeRenderer;
+})();
+
+</script>
+  <script>
+/* Canvas fallback uses the same 3D trail geometry and camera translation. */
+(function () {
+  'use strict';
+  class CanvasVolumeRenderer extends VolumeScene {
+    constructor(canvas, simulation) {
+      super(canvas, simulation);
+      this.context = canvas.getContext('2d');
+      if (!this.context) throw new Error('Neither WebGL2 nor Canvas2D is available.');
+      this.sprites = new Map();
+    }
+    resize() {
+      this.pixelRatio = Math.min(1.5, window.devicePixelRatio || 1);
+      this.width = Math.max(1, Math.floor(this.canvas.clientWidth * this.pixelRatio));
+      this.height = Math.max(1, Math.floor(this.canvas.clientHeight * this.pixelRatio));
+      if (this.canvas.width !== this.width || this.canvas.height !== this.height) {
+        this.canvas.width = this.width; this.canvas.height = this.height;
+      }
+    }
+    project(position, matrix) {
+      const depth = matrix[3] * position[0] + matrix[7] * position[1] + matrix[11] * position[2] + matrix[15];
+      if (depth < .04) return null;
+      const horizontal = (matrix[0] * position[0] + matrix[4] * position[1] + matrix[8] * position[2] + matrix[12]) / depth;
+      const vertical = (matrix[1] * position[0] + matrix[5] * position[1] + matrix[9] * position[2] + matrix[13]) / depth;
+      if (Math.abs(horizontal) > 1.2 || Math.abs(vertical) > 1.2) return null;
+      return [(horizontal * .5 + .5) * this.width, (-vertical * .5 + .5) * this.height, depth];
+    }
+    sprite(red, green, blue) {
+      const color = [red, green, blue].map(function (component) { return Math.round(component * 16) * 16; }).join(',');
+      if (this.sprites.has(color)) return this.sprites.get(color);
+      const canvas = document.createElement('canvas'); canvas.width = 48; canvas.height = 48;
+      const context = canvas.getContext('2d'), gradient = context.createRadialGradient(24, 24, 0, 24, 24, 24);
+      gradient.addColorStop(0, 'rgba(' + color + ',1)'); gradient.addColorStop(.45, 'rgba(' + color + ',.3)'); gradient.addColorStop(1, 'rgba(' + color + ',0)');
+      context.fillStyle = gradient; context.fillRect(0, 0, 48, 48);
+      this.sprites.set(color, canvas); return canvas;
+    }
+    drawCloud(vertices, matrix, pointSize, opacity, maximumPoints) {
+      const stride = Math.max(1, Math.ceil(vertices.length / 7 / maximumPoints)) * 7;
+      for (let vertexIndex = 0; vertexIndex < vertices.length; vertexIndex += stride) {
+        const position = this.project(vertices.subarray(vertexIndex, vertexIndex + 3), matrix);
+        if (!position) continue;
+        const diameter = Math.min(96, pointSize * this.pixelRatio * 32 / position[2]);
+        this.context.globalAlpha = Math.min(1, vertices[vertexIndex + 6] * opacity * Math.exp(-position[2] * .018));
+        this.context.drawImage(this.sprite(vertices[vertexIndex + 3], vertices[vertexIndex + 4], vertices[vertexIndex + 5]), position[0] - diameter / 2, position[1] - diameter / 2, diameter, diameter);
+      }
+    }
+    render(timestamp) {
+      this.advance(timestamp); this.resize();
+      const context = this.context, matrix = this.cameraMatrix();
+      context.globalAlpha = 1; context.globalCompositeOperation = 'source-over';
+      context.fillStyle = '#030609'; context.fillRect(0, 0, this.width, this.height);
+      context.globalCompositeOperation = 'lighter';
+      this.drawCloud(this.terrainVertices, matrix, 11, .85, 8000);
+      this.drawCloud(this.trailVertices, matrix, 12, .24, 11000);
+      this.drawCloud(this.trailVertices, matrix, 4.5, .80, 11000);
+      context.globalAlpha = 1;
+    }
+    destroy() { this.sprites.clear(); }
+  }
+  window.CanvasVolumeRenderer = CanvasVolumeRenderer;
+})();
+
+</script>
+  <script>
+/* Opt-in, local MediaPipe head tracking. All runtime assets use one pinned version. */
+(function () {
+  'use strict';
+  const visionBaseUrl = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21';
+  const modelUrl = 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
+  function clamp(value, minimum, maximum) { return Math.max(minimum, Math.min(maximum, value)); }
+  function cameraErrorMessage(error) {
+    if (error.name === 'NotAllowedError') return 'Camera permission was denied. Allow camera access in your browser, then try again.';
+    if (error.name === 'NotFoundError') return 'No camera found. Connect a webcam, then try again.';
+    if (error.name === 'NotReadableError') return 'The camera is busy or unavailable. Close other camera apps, then try again.';
+    return error.message || 'Unable to initialize face tracking.';
+  }
+  class FaceViewTracker {
+    constructor(video, onPose, onStatus) {
+      this.video = video;
+      this.onPose = onPose;
+      this.onStatus = onStatus;
+      this.active = false;
+      this.starting = false;
+      this.session = 0;
+      this.landmarker = null;
+      this.stream = null;
+      this.reference = null;
+      this.lastTimestamp = -Infinity;
+      this.lastVideoTime = -1;
+      this.lastFaceTimestamp = 0;
+      this.failedFrameCount = 0;
+      this.statusText = '';
+      this.statusActive = false;
+    }
+    status(message, active) {
+      if (message === this.statusText && active === this.statusActive) return;
+      this.statusText = message;
+      this.statusActive = active;
+      this.onStatus(message, active);
+    }
+    async loadLandmarker() {
+      try {
+        const vision = await import(visionBaseUrl + '/vision_bundle.mjs');
+        const fileset = await vision.FilesetResolver.forVisionTasks(visionBaseUrl + '/wasm');
+        return await vision.FaceLandmarker.createFromOptions(fileset, {
+          baseOptions: {modelAssetPath: modelUrl, delegate: 'CPU'},
+          runningMode: 'VIDEO', numFaces: 1,
+          outputFaceBlendshapes: false, outputFacialTransformationMatrixes: false
+        });
+      } catch (error) {
+        throw new Error('Could not load the face model. Check your connection and access to jsDelivr and Google Storage. ' + (error.message || ''));
+      }
+    }
+    async start() {
+      if (this.active || this.starting) return;
+      if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+        throw new Error('Webcam requires HTTPS or localhost and a browser with camera support.');
+      }
+      const session = ++this.session;
+      this.starting = true;
+      try {
+        this.status('Requesting camera access…', false);
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {width: {ideal: 480}, height: {ideal: 360}, facingMode: 'user'}, audio: false
+        });
+        if (session !== this.session) {
+          for (const track of stream.getTracks()) track.stop();
+          return;
+        }
+        this.stream = stream;
+        this.video.srcObject = stream;
+        this.video.style.display = 'block';
+        const tracker = this;
+        for (const track of stream.getVideoTracks()) track.addEventListener('ended', function () {
+          if (session !== tracker.session) return;
+          tracker.stop();
+          tracker.status('Camera disconnected. Reconnect it and enable webcam again.', false);
+        }, {once: true});
+        await this.video.play();
+        if (session !== this.session) return;
+        this.status('Loading facial landmark model…', false);
+        const landmarker = await this.loadLandmarker();
+        if (session !== this.session) { landmarker.close(); return; }
+        this.landmarker = landmarker;
+        this.reference = null;
+        this.lastTimestamp = -Infinity;
+        this.lastVideoTime = -1;
+        this.lastFaceTimestamp = performance.now();
+        this.failedFrameCount = 0;
+        this.active = true;
+        this.status('Looking for a face · video stays on this device', false);
+      } catch (error) {
+        if (session !== this.session) return;
+        this.stop();
+        const message = cameraErrorMessage(error);
+        this.status(message, false);
+        throw new Error(message);
+      } finally {
+        if (session === this.session) this.starting = false;
+      }
+    }
+    recalibrate() {
+      this.reference = null;
+      this.onPose(null);
+      this.status('Look at the screen to set a neutral position…', false);
+    }
+    tick(timestamp) {
+      if (!this.active || !this.landmarker || timestamp - this.lastTimestamp < 95 ||
+          this.video.readyState < 2 || !this.video.videoWidth || !this.video.videoHeight ||
+          this.video.currentTime === this.lastVideoTime) {
+        if (this.active && timestamp - this.lastFaceTimestamp > 1400) this.loseFace();
+        return;
+      }
+      this.lastTimestamp = timestamp;
+      this.lastVideoTime = this.video.currentTime;
+      try {
+        const faces = this.landmarker.detectForVideo(this.video, timestamp).faceLandmarks;
+        this.failedFrameCount = 0;
+        if (!faces?.length) {
+          if (timestamp - this.lastFaceTimestamp > 1400) this.loseFace();
+          return;
+        }
+        const landmarks = faces[0];
+        const leftEye = landmarks[33], rightEye = landmarks[263];
+        const leftCheek = landmarks[234], rightCheek = landmarks[454];
+        if (!leftEye || !rightEye || !leftCheek || !rightCheek) return;
+        const eyeCenterX = (leftEye.x + rightEye.x) / 2;
+        const eyeCenterY = (leftEye.y + rightEye.y) / 2;
+        const faceWidth = Math.hypot(leftCheek.x - rightCheek.x, leftCheek.y - rightCheek.y);
+        if (!(faceWidth > 0.025)) return;
+        this.lastFaceTimestamp = timestamp;
+        if (!this.reference) this.reference = {eyeCenterX: eyeCenterX, eyeCenterY: eyeCenterY, faceWidth: faceWidth};
+        const reference = this.reference;
+        const distanceFactor = clamp(reference.faceWidth / faceWidth, 0.52, 1.85);
+        this.onPose({
+          x: clamp((reference.eyeCenterX - eyeCenterX) * 20, -5.5, 5.5),
+          y: clamp((reference.eyeCenterY - eyeCenterY) * 14, -4, 4),
+          d: 25 * distanceFactor
+        });
+        this.status('Tracking face · approximate 3D head pose', true);
+      } catch (error) {
+        this.failedFrameCount++;
+        this.onPose(null);
+        if (this.failedFrameCount >= 3) {
+          this.stop();
+          this.status('Face detection stopped. Enable webcam to retry.', false);
+          console.warn('MediaPipe stopped after repeated detection failures.', error);
+        } else this.status('Face detection interrupted; retrying…', false);
+      }
+    }
+    loseFace() {
+      this.onPose(null);
+      this.status('Looking for a face · manual orbit available', false);
+    }
+    stop() {
+      ++this.session;
+      this.active = false;
+      this.starting = false;
+      if (this.landmarker) {
+        try { this.landmarker.close(); } catch (error) { /* Already released by the runtime. */ }
+      }
+      this.landmarker = null;
+      if (this.stream) for (const track of this.stream.getTracks()) track.stop();
+      this.stream = null;
+      this.video.pause();
+      this.video.srcObject = null;
+      this.video.style.display = 'none';
+      this.reference = null;
+      this.onPose(null);
+      this.status('Manual orbit active', false);
+    }
+  }
+  window.FaceViewTracker = FaceViewTracker;
+})();
+
+</script>
+  <script>
+(function () {
+  'use strict';
+  function element(identifier) { return document.getElementById(identifier); }
+  let simulation = null, renderer = null, gpuDiffuser = null, tracker = null;
+  let playing = true, rebuilding = false, pendingStep = false;
+  let cameraWasActive = false;
+  let diffusionJob = null, generation = 0, memoryRevision = 0;
+  let lastFrameTime = performance.now(), lastDiffusionTime = 0, lastStatisticsTime = 0;
+  let tripAccumulator = 0, framesPerSecond = 60, memoryNeedsUpdate = false, toastTimer = null;
+  const memoryRetentionFactor = 0.97;
+  const tripGenerationRate = 4;
+  const options = {n: 40, connectivity: 50, roughness: .65, barriers: .18, climb: 2, learning: .8, hubBias: .65, fast: true};
+
+  function toast(message) {
+    element('toast').textContent = message;
+    element('toast').classList.add('visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { element('toast').classList.remove('visible'); }, 5500);
+  }
+  function formatInteger(value) { return Math.round(value).toLocaleString('en-US'); }
+  function updateComputeBadge() {
+    element('computeBadge').textContent = gpuDiffuser ? 'WEBGPU FIELD · CPU A*' : 'CPU FIELD · CPU A*';
+    element('computeBadge').title = (renderer instanceof CanvasVolumeRenderer ? 'Canvas 2D projection' : 'WebGL2 rendering') +
+      (gpuDiffuser ? ' · WebGPU diffusion · CPU pathfinding' : ' · CPU diffusion and pathfinding');
+  }
+  function updateMetrics() {
+    if (!simulation || element('dataPanel').hidden) return;
+    element('nodesMetric').textContent = formatInteger(simulation.count);
+    element('routesMetric').textContent = formatInteger(simulation.tripCount);
+    element('coverageMetric').textContent = (simulation.coverage() * 100).toFixed(1) + '%';
+    element('searchMetric').textContent = simulation.lastVisited ? formatInteger(simulation.lastVisited) + ' nodes' : '—';
+    element('footerNodeInfo').textContent = simulation.connectivity + ' IMPLICIT EDGES / INTERIOR NODE';
+    element('footerProgress').textContent = (simulation.solidCount / simulation.count * 100).toFixed(1) +
+      '% BLOCKED · ' + formatInteger(simulation.attempts) + ' TRIPS ATTEMPTED';
+    element('annotation').textContent = simulation.n + '³ independent nodes · ' + simulation.connectivity + ' move vectors · fading trail cloud';
+  }
+  function setPlaying(value) {
+    playing = value;
+    if (renderer) renderer.animationPlaying = playing;
+    element('runButton').innerHTML = playing ? '<span aria-hidden="true">Ⅱ</span> Pause' : '<span aria-hidden="true">▷</span> Resume';
+    element('runButton').setAttribute('aria-pressed', String(playing));
+    element('simulationStatus').textContent = playing ? 'TRACES IN MOTION' : 'PAUSED';
+    element('livePulse').classList.toggle('paused', !playing);
+  }
+  async function initializeGpu(currentSimulation, currentGeneration) {
+    const candidate = await VolumeGpuDiffuser.create(currentSimulation.n, currentSimulation.solid, function (error, failedDiffuser) {
+      if (gpuDiffuser !== failedDiffuser) return;
+      gpuDiffuser = null;
+      failedDiffuser.destroy();
+      updateComputeBadge();
+      toast('WebGPU interrupted. Simulation continues on the CPU.');
+    });
+    if (currentGeneration !== generation || simulation !== currentSimulation) {
+      candidate?.destroy();
+      return;
+    }
+    gpuDiffuser = candidate;
+    updateComputeBadge();
+  }
+  function applyViewSettings() {
+    renderer.head.mode = element('viewMode').value;
+    renderer.animationPlaying = playing;
+  }
+  function rebuild(settings = {}) {
+    const currentGeneration = ++generation;
+    rebuilding = true;
+    pendingStep = false;
+    diffusionJob = null;
+    const previousDiffuser = gpuDiffuser;
+    gpuDiffuser = null;
+    previousDiffuser?.destroy();
+    if (settings.newSeed) options.seed = Math.floor(Math.random() * 0x7fffffff);
+    const overlay = element('loading');
+    overlay.classList.remove('hidden');
+    element('stepButton').disabled = true;
+    requestAnimationFrame(function () {
+      setTimeout(function () {
+        if (currentGeneration !== generation) return;
+        try {
+          simulation = new VolumeSimulation({...options, seed: options.seed || 726133});
+          if (!renderer) renderer = new VolumeRenderer(element('scene'), simulation);
+          else { renderer.sim = simulation; renderer.rebuild(); }
+          applyViewSettings();
+          tripAccumulator = 0;
+          lastDiffusionTime = performance.now();
+          memoryNeedsUpdate = true;
+          updateMetrics();
+          overlay.classList.add('hidden');
+          element('computeBadge').textContent = 'CHECKING WEBGPU…';
+          initializeGpu(simulation, currentGeneration);
+
+        } catch (error) {
+          overlay.textContent = 'Unable to initialize the volume: ' + error.message;
+          console.error(error);
+        } finally {
+          rebuilding = false;
+          element('stepButton').disabled = !renderer;
+        }
+      }, 20);
+    });
+  }
+  function generateTrip() {
+    if (!simulation || !renderer || rebuilding || diffusionJob) return;
+    const route = simulation.step();
+    if (route) { renderer.addRoute(route); memoryNeedsUpdate = true; }
+  }
+  async function diffuse() {
+    if (diffusionJob || !simulation || rebuilding) return;
+    const currentSimulation = simulation;
+    const currentDiffuser = gpuDiffuser;
+    const currentRevision = memoryRevision;
+    const job = {};
+    diffusionJob = job;
+    const retentionFactor = memoryRetentionFactor;
+    try {
+      if (currentDiffuser) {
+        const result = await currentDiffuser.diffuse(currentSimulation.traffic, retentionFactor, .09);
+        if (simulation === currentSimulation && currentRevision === memoryRevision) {
+          currentSimulation.traffic = result;
+          memoryNeedsUpdate = true;
+        }
+      } else {
+        currentSimulation.diffuseCPU(retentionFactor, .09);
+        memoryNeedsUpdate = true;
+      }
+    } catch (error) {
+      // A retired device must never overwrite or dispose the replacement field/device.
+      if (simulation === currentSimulation && !rebuilding) {
+        if (gpuDiffuser === currentDiffuser) {
+          gpuDiffuser = null;
+          currentDiffuser?.destroy();
+          updateComputeBadge();
+          console.warn('GPU diffusion failed; using CPU diffusion.', error);
+        }
+        if (currentRevision === memoryRevision) {
+          currentSimulation.diffuseCPU(retentionFactor, .09);
+          memoryNeedsUpdate = true;
+        }
+      }
+    } finally {
+      if (diffusionJob === job) diffusionJob = null;
+    }
+  }
+  function frame(timestamp) {
+    const elapsedSeconds = Math.min(.2, (timestamp - lastFrameTime) / 1000);
+    lastFrameTime = timestamp;
+    framesPerSecond += (1 / Math.max(elapsedSeconds, .001) - framesPerSecond) * .025;
+    tracker?.tick(timestamp);
+    if (simulation && renderer && !rebuilding) {
+      if (pendingStep && !diffusionJob) { pendingStep = false; generateTrip(); updateMetrics(); }
+      if (playing && !diffusionJob) {
+        tripAccumulator += elapsedSeconds * tripGenerationRate;
+        let generatedTripCount = 0;
+        while (tripAccumulator >= 1 && generatedTripCount < 2) {
+          generateTrip(); tripAccumulator--; generatedTripCount++;
+        }
+        tripAccumulator = Math.min(3, tripAccumulator);
+        if (timestamp - lastDiffusionTime > 1150) { lastDiffusionTime = timestamp; diffuse(); }
+      }
+      if (memoryNeedsUpdate && timestamp - lastStatisticsTime > 500) {
+        renderer.updateMemory(); memoryNeedsUpdate = false;
+      }
+      if (timestamp - lastStatisticsTime > 750) {
+        updateMetrics(); element('fpsBadge').textContent = Math.round(framesPerSecond) + ' FPS'; lastStatisticsTime = timestamp;
+      }
+    }
+    if (renderer) renderer.render(timestamp);
+    requestAnimationFrame(frame);
+  }
+  function resetView() {
+    if (!renderer) return;
+    renderer.yaw = -.94; renderer.pitch = .52; renderer.radius = 30; renderer.target = [0, 0, 0];
+    if (tracker.active) tracker.recalibrate();
+  }
+  function clearMemory() {
+    if (!simulation || rebuilding) return;
+    ++memoryRevision;
+    pendingStep = false;
+    simulation.traffic.fill(0); simulation.scratch.fill(0);
+    simulation.tripCount = 0; simulation.attempts = 0; simulation.lastVisited = 0;
+    simulation.lastPath = null; simulation.lastCost = 0;
+    renderer.routes = []; renderer.updateRoutes(); renderer.updateMemory();
+    updateMetrics();
+    toast('Travel memory and route history cleared');
+  }
+  function setImmersive(enabled) {
+    const interfaceElement = element('interface');
+    interfaceElement.hidden = enabled;
+    interfaceElement.inert = enabled;
+    document.body.classList.toggle('immersive', enabled);
+    if (enabled) {
+      element('dataPanel').hidden = true;
+      element('dataToggle').setAttribute('aria-expanded', 'false');
+      element('toast').classList.remove('visible');
+      element('scene').focus({preventScroll: true});
+    }
+  }
+  function synchronizeCameraState() {
+    element('hideInterface').hidden = !tracker.active;
+    if (tracker.active && !cameraWasActive) setImmersive(true);
+    if (!tracker.active && cameraWasActive) setImmersive(false);
+    cameraWasActive = tracker.active;
+  }
+  function bindInterface() {
+    element('dataToggle').addEventListener('click', function () {
+      const panel = element('dataPanel');
+      panel.hidden = !panel.hidden;
+      element('dataToggle').setAttribute('aria-expanded', String(!panel.hidden));
+      updateMetrics();
+    });
+    element('closeData').addEventListener('click', function () {
+      element('dataPanel').hidden = true;
+      element('dataToggle').setAttribute('aria-expanded', 'false');
+      element('dataToggle').focus();
+    });
+    element('hideInterface').addEventListener('click', function () { if (tracker.active) setImmersive(true); });
+    let pointerStart = null;
+    element('scene').addEventListener('pointerdown', function (event) {
+      pointerStart = {horizontal: event.clientX, vertical: event.clientY, identifier: event.pointerId, button: event.button};
+    });
+    element('scene').addEventListener('pointerup', function (event) {
+      if (tracker.active && pointerStart && pointerStart.button === 0 && pointerStart.identifier === event.pointerId &&
+          Math.hypot(event.clientX - pointerStart.horizontal, event.clientY - pointerStart.vertical) < 6) {
+        setImmersive(!element('interface').hidden);
+      }
+      pointerStart = null;
+    });
+    element('scene').addEventListener('pointercancel', function () { pointerStart = null; });
+  }
+  function bindFullscreen() {
+    element('fullscreenButton').hidden = !document.fullscreenEnabled;
+    element('fullscreenButton').addEventListener('click', async function () {
+      try {
+        if (document.fullscreenElement) await document.exitFullscreen();
+        else await document.documentElement.requestFullscreen();
+      } catch (error) { toast('Full screen is unavailable in this browser window.'); }
+    });
+    document.addEventListener('fullscreenchange', function () {
+      const label = document.fullscreenElement ? 'Exit full screen' : 'Enter full screen';
+      element('fullscreenButton').setAttribute('aria-label', label);
+      element('fullscreenButton').title = label;
+    });
+  }
+  function bind() {
+    element('runButton').addEventListener('click', function () { setPlaying(!playing); });
+    element('stepButton').addEventListener('click', function () { setPlaying(false); pendingStep = true; });
+    element('newWorld').addEventListener('click', function () { rebuild({newSeed: true}); });
+    element('clearMemory').addEventListener('click', clearMemory);
+    element('resetView').addEventListener('click', resetView);
+    element('viewMode').addEventListener('change', function (event) { if (renderer) renderer.head.mode = event.target.value; });
+    element('calibrate').addEventListener('click', function () { tracker.recalibrate(); });
+    tracker = new FaceViewTracker(element('cameraVideo'), function (pose) {
+      if (!renderer) return;
+      if (pose) renderer.head.active = true;
+      else if (!tracker.active) renderer.head.active = false;
+      if (pose) { renderer.head.x = pose.x; renderer.head.y = pose.y; renderer.head.d = pose.d; }
+    }, function (message, active) {
+      element('cameraStatus').textContent = message;
+      element('cameraStatus').classList.toggle('on', active);
+      element('headControls').classList.toggle('tracking', active);
+      element('cameraToggle').setAttribute('aria-pressed', String(tracker.active));
+      element('calibrate').disabled = !tracker.active;
+      if (!tracker.starting) element('cameraToggle').textContent = tracker.active ? 'Disable webcam' : 'Enable webcam';
+      synchronizeCameraState();
+    });
+    element('cameraToggle').addEventListener('click', async function () {
+      if (tracker.active) { tracker.stop(); return; }
+      const button = element('cameraToggle');
+      button.disabled = true; button.textContent = 'Connecting…';
+      button.setAttribute('aria-busy', 'true');
+      try {
+        await tracker.start();
+        synchronizeCameraState();
+      } catch (error) { toast(error.message); }
+      finally {
+        button.disabled = false;
+        button.setAttribute('aria-busy', 'false');
+        button.setAttribute('aria-pressed', String(tracker.active));
+        button.textContent = tracker.active ? 'Disable webcam' : 'Enable webcam';
+        element('calibrate').disabled = !tracker.active;
+        synchronizeCameraState();
+      }
+    });
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        if (tracker.active) setImmersive(!element('interface').hidden);
+        else { element('dataPanel').hidden = true; element('dataToggle').setAttribute('aria-expanded', 'false'); }
+        return;
+      }
+      if (event.repeat || event.ctrlKey || event.altKey || event.metaKey || event.target.isContentEditable ||
+          ['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON', 'SUMMARY'].includes(event.target.tagName)) return;
+      if (event.code === 'Space') { event.preventDefault(); setPlaying(!playing); }
+      else if (event.key.toLowerCase() === 'n') rebuild({newSeed: true});
+      else if (event.key.toLowerCase() === 'c' && tracker.active) tracker.recalibrate();
+    });
+    window.addEventListener('pagehide', function () { ++generation; tracker.stop(); gpuDiffuser?.destroy(); gpuDiffuser = null; });
+    window.addEventListener('pageshow', function (event) { if (event.persisted && simulation) initializeGpu(simulation, generation); });
+    bindFullscreen();
+    bindInterface();
+  }
+  bind(); rebuild(); requestAnimationFrame(frame);
+})();
+
+</script>
+</body>
+</html>

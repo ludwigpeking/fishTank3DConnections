@@ -1,0 +1,5 @@
+# Headless-browser profiles and screenshots from QA runs
+qa/shots/
+.profile/
+node_modules/
+.DS_Store
