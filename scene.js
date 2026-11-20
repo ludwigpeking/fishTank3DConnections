@@ -81,7 +81,7 @@
       this.canvas = canvas; this.sim = simulation;
       this.routes = []; this.terrainVertices = new Float32Array();
       this.trailVertices = new Float32Array(); this.filamentVertices = new Float32Array();
-      this.yaw = -.94; this.pitch = .52; this.radius = 30; this.target = [0, 0, 0];
+      this.yaw = -.94; this.pitch = .52; this.radius = 22; this.target = [0, 0, 0];
       this.head = {active: false, mode: 'window', x: 0, y: 0, d: 25};
       this.headCurrent = {x: 0, y: 0, d: 25};
       this.width = 1; this.height = 1; this.pointer = null;

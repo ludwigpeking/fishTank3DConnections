@@ -173,7 +173,7 @@
   }
   function resetView() {
     if (!renderer) return;
-    renderer.yaw = -.94; renderer.pitch = .52; renderer.radius = 30; renderer.target = [0, 0, 0];
+    renderer.yaw = -.94; renderer.pitch = .52; renderer.radius = 22; renderer.target = [0, 0, 0];
     if (tracker.active) tracker.recalibrate();
   }
   function clearMemory() {
@@ -231,6 +231,11 @@
     });
     element('scene').addEventListener('pointercancel', function () { pointerStart = null; });
   }
+  async function enterCameraFullscreen() {
+    if (document.fullscreenElement || !document.fullscreenEnabled) return;
+    try { await document.documentElement.requestFullscreen(); }
+    catch (error) { /* Camera control remains available if full screen is denied. */ }
+  }
   function bindFullscreen() {
     element('fullscreenButton').hidden = !document.fullscreenEnabled;
     element('fullscreenButton').addEventListener('click', async function () {
@@ -243,6 +248,7 @@
       const label = document.fullscreenElement ? 'Exit full screen' : 'Enter full screen';
       element('fullscreenButton').setAttribute('aria-label', label);
       element('fullscreenButton').title = label;
+      if (!document.fullscreenElement && tracker.active) setImmersive(false);
     });
   }
   function bind() {
@@ -272,8 +278,11 @@
       const button = element('cameraToggle');
       button.disabled = true; button.textContent = 'Connecting…';
       button.setAttribute('aria-busy', 'true');
+      // Request during the click gesture, before camera permission/model loading awaits.
+      const fullscreenRequest = enterCameraFullscreen();
       try {
         await tracker.start();
+        await fullscreenRequest;
         synchronizeCameraState();
       } catch (error) { toast(error.message); }
       finally {

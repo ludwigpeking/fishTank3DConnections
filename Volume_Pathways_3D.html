@@ -46,7 +46,7 @@
         <button id="cameraToggle" class="webcam-button" aria-pressed="false" aria-describedby="cameraStatus cameraHelp">Enable webcam</button>
         <div class="head-control-options"><select id="viewMode" aria-label="Head-tracking view mode"><option value="window">Head translation</option><option value="orbit">Head-driven orbit</option></select><button id="calibrate" class="scene-action" disabled>Center view</button></div>
         <div id="cameraStatus" class="tiny-status" role="status">Ready for head tracking.</div>
-        <p id="cameraHelp" class="camera-help">Controls disappear when connected. Press Esc or tap the scene to bring them back. Press C to recenter.</p>
+        <p id="cameraHelp" class="camera-help">Enabling the webcam enters full screen. Controls disappear when connected. Press Esc or tap the scene to bring them back. Press C to recenter.</p>
         <button id="hideInterface" class="scene-action" hidden>Return to the space</button>
       </section>
       <nav class="playback-dock" aria-label="Simulation controls"><button id="runButton" class="primary-button" aria-pressed="true">Pause</button><button id="stepButton" class="dock-button">Step</button><span class="dock-divider"></span><button id="resetView" class="dock-button">Reset view</button><button id="fullscreenButton" class="dock-button" aria-label="Enter full screen" title="Enter full screen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></button></nav>
@@ -561,7 +561,7 @@
       this.canvas = canvas; this.sim = simulation;
       this.routes = []; this.terrainVertices = new Float32Array();
       this.trailVertices = new Float32Array(); this.filamentVertices = new Float32Array();
-      this.yaw = -.94; this.pitch = .52; this.radius = 30; this.target = [0, 0, 0];
+      this.yaw = -.94; this.pitch = .52; this.radius = 22; this.target = [0, 0, 0];
       this.head = {active: false, mode: 'window', x: 0, y: 0, d: 25};
       this.headCurrent = {x: 0, y: 0, d: 25};
       this.width = 1; this.height = 1; this.pointer = null;
@@ -706,27 +706,29 @@
       layout(location=1) in vec4 color;
       uniform mat4 cameraMatrix;
       uniform float pointSize;
+      uniform float maximumPointDiameter;
       uniform float opacity;
       out vec4 particleColor;
       void main() {
         vec4 projected = cameraMatrix * vec4(position, 1.0);
         gl_Position = projected;
-        gl_PointSize = clamp(pointSize * 32.0 / max(projected.w, .1), 1.0, 96.0);
+        gl_PointSize = clamp(pointSize * 32.0 / max(projected.w, .1), 1.0, maximumPointDiameter);
         float depthFade = exp(-max(projected.w, 0.0) * .018);
         particleColor = vec4(color.rgb, color.a * opacity * depthFade);
       }`);
     const fragmentShader = compileShader(context, context.FRAGMENT_SHADER, `#version 300 es
       precision mediump float;
       in vec4 particleColor;
+      uniform float radialFalloff;
       out vec4 outputColor;
       void main() {
-        ${pointSprites ? 'float radius = length(gl_PointCoord - vec2(.5)) * 2.0; if (radius > 1.0) discard; float softness = exp(-radius * radius * 5.0) * (1.0 - smoothstep(.7, 1.0, radius)); outputColor = vec4(particleColor.rgb, particleColor.a * softness);' : 'outputColor = particleColor;'}
+        ${pointSprites ? 'float radius = length(gl_PointCoord - vec2(.5)) * 2.0; if (radius > 1.0) discard; float softness = exp(-radius * radius * radialFalloff) * (1.0 - smoothstep(.7, 1.0, radius)); outputColor = vec4(particleColor.rgb, particleColor.a * softness);' : 'outputColor = particleColor;'}
       }`);
     const program = context.createProgram();
     context.attachShader(program, vertexShader); context.attachShader(program, fragmentShader); context.linkProgram(program);
     context.deleteShader(vertexShader); context.deleteShader(fragmentShader);
     if (!context.getProgramParameter(program, context.LINK_STATUS)) throw new Error(context.getProgramInfoLog(program));
-    return {program: program, cameraMatrix: context.getUniformLocation(program, 'cameraMatrix'), pointSize: context.getUniformLocation(program, 'pointSize'), opacity: context.getUniformLocation(program, 'opacity')};
+    return {program: program, cameraMatrix: context.getUniformLocation(program, 'cameraMatrix'), pointSize: context.getUniformLocation(program, 'pointSize'), opacity: context.getUniformLocation(program, 'opacity'), radialFalloff: context.getUniformLocation(program, 'radialFalloff'), maximumPointDiameter: context.getUniformLocation(program, 'maximumPointDiameter')};
   }
   class VolumeRenderer extends VolumeScene {
     constructor(canvas, simulation) {
@@ -764,13 +766,15 @@
       }
       this.context.viewport(0, 0, this.width, this.height);
     }
-    draw(mesh, program, mode, cameraMatrix, pointSize, opacity) {
+    draw(mesh, program, mode, cameraMatrix, pointSize, opacity, radialFalloff = 5, maximumPointDiameter = 96) {
       if (!mesh.count) return;
       const context = this.context;
       context.useProgram(program.program);
       context.uniformMatrix4fv(program.cameraMatrix, false, cameraMatrix);
       context.uniform1f(program.pointSize, pointSize * this.pixelRatio);
       context.uniform1f(program.opacity, opacity);
+      context.uniform1f(program.radialFalloff, radialFalloff);
+      context.uniform1f(program.maximumPointDiameter, maximumPointDiameter);
       context.bindBuffer(context.ARRAY_BUFFER, mesh.buffer);
       context.enableVertexAttribArray(0); context.enableVertexAttribArray(1);
       context.vertexAttribPointer(0, 3, context.FLOAT, false, 28, 0);
@@ -790,7 +794,10 @@
         this.upload(this.trailMesh, this.trailVertices); this.upload(this.filamentMesh, this.filamentVertices);
         this.uploadedTrailRevision = this.trailRevision;
       }
-      this.draw(this.terrainMesh, this.pointsProgram, context.POINTS, cameraMatrix, 11, .65);
+      // Broad, overlapping fog kernels accumulate color without bleaching to white.
+      context.blendFunc(context.SRC_ALPHA, context.ONE_MINUS_SRC_ALPHA);
+      this.draw(this.terrainMesh, this.pointsProgram, context.POINTS, cameraMatrix, 60, .38, 2.5, 320);
+      context.blendFunc(context.SRC_ALPHA, context.ONE);
       this.draw(this.trailMesh, this.pointsProgram, context.POINTS, cameraMatrix, 13, .18);
       this.draw(this.trailMesh, this.pointsProgram, context.POINTS, cameraMatrix, 4.5, .70);
       this.draw(this.filamentMesh, this.linesProgram, context.LINES, cameraMatrix, 1, .65);
@@ -831,23 +838,29 @@
       if (Math.abs(horizontal) > 1.2 || Math.abs(vertical) > 1.2) return null;
       return [(horizontal * .5 + .5) * this.width, (-vertical * .5 + .5) * this.height, depth];
     }
-    sprite(red, green, blue) {
-      const color = [red, green, blue].map(function (component) { return Math.round(component * 16) * 16; }).join(',');
-      if (this.sprites.has(color)) return this.sprites.get(color);
-      const canvas = document.createElement('canvas'); canvas.width = 48; canvas.height = 48;
-      const context = canvas.getContext('2d'), gradient = context.createRadialGradient(24, 24, 0, 24, 24, 24);
-      gradient.addColorStop(0, 'rgba(' + color + ',1)'); gradient.addColorStop(.45, 'rgba(' + color + ',.3)'); gradient.addColorStop(1, 'rgba(' + color + ',0)');
-      context.fillStyle = gradient; context.fillRect(0, 0, 48, 48);
-      this.sprites.set(color, canvas); return canvas;
+    sprite(red, green, blue, radialFalloff) {
+      const color = [red, green, blue].map(function (component) { return Math.min(255, Math.round(component * 16) * 16); }).join(',');
+      const spriteKey = color + ':' + radialFalloff;
+      if (this.sprites.has(spriteKey)) return this.sprites.get(spriteKey);
+      const canvas = document.createElement('canvas'); canvas.width = 128; canvas.height = 128;
+      const context = canvas.getContext('2d'), gradient = context.createRadialGradient(64, 64, 0, 64, 64, 64);
+      for (let stopIndex = 0; stopIndex <= 10; stopIndex++) {
+        const radiusFactor = stopIndex / 10;
+        const edgeFraction = Math.max(0, Math.min(1, (radiusFactor - .7) / .3));
+        const opacity = Math.exp(-radiusFactor * radiusFactor * radialFalloff) * (1 - edgeFraction * edgeFraction * (3 - 2 * edgeFraction));
+        gradient.addColorStop(radiusFactor, 'rgba(' + color + ',' + opacity + ')');
+      }
+      context.fillStyle = gradient; context.fillRect(0, 0, 128, 128);
+      this.sprites.set(spriteKey, canvas); return canvas;
     }
-    drawCloud(vertices, matrix, pointSize, opacity, maximumPoints) {
+    drawCloud(vertices, matrix, pointSize, opacity, maximumPoints, radialFalloff = 5, maximumPointDiameter = 96) {
       const stride = Math.max(1, Math.ceil(vertices.length / 7 / maximumPoints)) * 7;
       for (let vertexIndex = 0; vertexIndex < vertices.length; vertexIndex += stride) {
         const position = this.project(vertices.subarray(vertexIndex, vertexIndex + 3), matrix);
         if (!position) continue;
-        const diameter = Math.min(96, pointSize * this.pixelRatio * 32 / position[2]);
+        const diameter = Math.min(maximumPointDiameter, pointSize * this.pixelRatio * 32 / position[2]);
         this.context.globalAlpha = Math.min(1, vertices[vertexIndex + 6] * opacity * Math.exp(-position[2] * .018));
-        this.context.drawImage(this.sprite(vertices[vertexIndex + 3], vertices[vertexIndex + 4], vertices[vertexIndex + 5]), position[0] - diameter / 2, position[1] - diameter / 2, diameter, diameter);
+        this.context.drawImage(this.sprite(vertices[vertexIndex + 3], vertices[vertexIndex + 4], vertices[vertexIndex + 5], radialFalloff), position[0] - diameter / 2, position[1] - diameter / 2, diameter, diameter);
       }
     }
     render(timestamp) {
@@ -855,8 +868,8 @@
       const context = this.context, matrix = this.cameraMatrix();
       context.globalAlpha = 1; context.globalCompositeOperation = 'source-over';
       context.fillStyle = '#030609'; context.fillRect(0, 0, this.width, this.height);
+      this.drawCloud(this.terrainVertices, matrix, 60, .50, 8000, 2.5, 320);
       context.globalCompositeOperation = 'lighter';
-      this.drawCloud(this.terrainVertices, matrix, 11, .85, 8000);
       this.drawCloud(this.trailVertices, matrix, 12, .24, 11000);
       this.drawCloud(this.trailVertices, matrix, 4.5, .80, 11000);
       context.globalAlpha = 1;
@@ -1190,7 +1203,11 @@
     framesPerSecond += (1 / Math.max(elapsedSeconds, .001) - framesPerSecond) * .025;
     tracker?.tick(timestamp);
     if (simulation && renderer && !rebuilding) {
-      if (pendingStep && !diffusionJob) { pendingStep = false; generateTrip(); updateMetrics(); }
+      if (pendingStep && !diffusionJob) {
+        pendingStep = false; generateTrip();
+        renderer.sceneTime += .6;
+        updateMetrics();
+      }
       if (playing && !diffusionJob) {
         tripAccumulator += elapsedSeconds * tripGenerationRate;
         let generatedTripCount = 0;
@@ -1212,7 +1229,7 @@
   }
   function resetView() {
     if (!renderer) return;
-    renderer.yaw = -.94; renderer.pitch = .52; renderer.radius = 30; renderer.target = [0, 0, 0];
+    renderer.yaw = -.94; renderer.pitch = .52; renderer.radius = 22; renderer.target = [0, 0, 0];
     if (tracker.active) tracker.recalibrate();
   }
   function clearMemory() {
@@ -1270,6 +1287,11 @@
     });
     element('scene').addEventListener('pointercancel', function () { pointerStart = null; });
   }
+  async function enterCameraFullscreen() {
+    if (document.fullscreenElement || !document.fullscreenEnabled) return;
+    try { await document.documentElement.requestFullscreen(); }
+    catch (error) { /* Camera control remains available if full screen is denied. */ }
+  }
   function bindFullscreen() {
     element('fullscreenButton').hidden = !document.fullscreenEnabled;
     element('fullscreenButton').addEventListener('click', async function () {
@@ -1282,6 +1304,7 @@
       const label = document.fullscreenElement ? 'Exit full screen' : 'Enter full screen';
       element('fullscreenButton').setAttribute('aria-label', label);
       element('fullscreenButton').title = label;
+      if (!document.fullscreenElement && tracker.active) setImmersive(false);
     });
   }
   function bind() {
@@ -1311,8 +1334,11 @@
       const button = element('cameraToggle');
       button.disabled = true; button.textContent = 'Connecting…';
       button.setAttribute('aria-busy', 'true');
+      // Request during the click gesture, before camera permission/model loading awaits.
+      const fullscreenRequest = enterCameraFullscreen();
       try {
         await tracker.start();
+        await fullscreenRequest;
         synchronizeCameraState();
       } catch (error) { toast(error.message); }
       finally {
